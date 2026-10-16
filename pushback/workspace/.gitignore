@@ -1,4 +1,0 @@
-# iteration logs from eval runs
-iteration-*/
-iteration-*.runner.log
-iteration-*.grader.log

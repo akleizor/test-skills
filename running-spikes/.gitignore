@@ -1,8 +1,0 @@
-workspace/
-.DS_Store
-*.pyc
-__pycache__/
-
-# aislop runtime artifacts (session/history logs, caches, baselines).
-**/.aislop/*
-!**/.aislop/config.yml
