@@ -16,6 +16,33 @@ pytest -n auto tests/
 
 `-n auto` spawns one worker per CPU core. `-n 4` caps at 4 workers.
 
+**Worker count on hybrid CPUs (Apple silicon):** `-n auto` counts efficiency cores too, and on a
+machine where most cores are efficiency cores the extra workers queue on slow cores and every
+worker pays the import of heavy dependencies. Measured on a 6 performance + 12 efficiency Mac mini:
+18 workers ran three suites 1.6-2x slower than 10. Set the default once, in `conftest.py`, through
+xdist's own hook, so nobody has to remember a flag:
+
+```python
+import subprocess
+
+def pytest_xdist_auto_num_workers(config):
+    try:
+        fast, slow = (int(subprocess.check_output(
+            ["sysctl", "-n", f"hw.perflevel{i}.physicalcpu"], text=True)) for i in (0, 1))
+    except (OSError, ValueError, subprocess.CalledProcessError):
+        return None          # not Apple silicon: xdist's default
+    return fast + slow // 3
+```
+
+Measure 3-4 counts back to back on the real suite; heavy-import suites (ML frameworks) can peak at
+the performance-core count alone. Put `-n auto --dist worksteal` in `addopts` so bare `pytest` is
+parallel and `-n0` gives a serial run for a debugger.
+
+**unittest `addModuleCleanup` under pytest:** pytest runs `setUpModule` but never the cleanups it
+registers, so a module-wide patch leaks into every later module on the same worker - a failure that
+looks random because it depends on which files share a worker. Run them from a module-scoped
+autouse fixture in `conftest.py`: `yield; unittest.case.doModuleCleanups()`.
+
 **Distribution modes** - choose based on fixture design:
 
 - `--dist loadscope` groups tests by module or class. Tests in the same class share a worker, so class-scoped fixtures run once per class instead of once per worker. Best when fixtures are expensive and class-scoped.

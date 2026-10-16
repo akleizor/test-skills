@@ -62,3 +62,26 @@ Dropping a coverage threshold, a timeout, or a quality bar to dodge a slow test 
 Cue: a PR lowers `--cov-fail-under`, raises a timeout constant, or adds `[ExcludeFromCodeCoverage]` without a documented reason.
 Right move: escalate via `escalate-over-shortcut` and fix the underlying issue rather than ship the workaround.
 The gate exists to tell the truth; weakening it means you're paying to hear less truth.
+
+## 9. Per-element round trips to a browser or service
+
+A scraper or driver test that calls the browser once per cell (`for td in row.query_selector_all("td"): td.inner_text()`)
+pays a fixed per-call cost hundreds of times; on a real statement page that was 22 of a 28 s parse. Read the
+whole table in one call (`table.evaluate(...)` returning every row's cell texts) with the same selectors and
+`innerText`. It is a production speedup as much as a test one. Profile with a sampling profiler: the
+Playwright sync API spends most of each call capturing `inspect.stack()`.
+
+Related: one browser per worker process, shared by every test, with a fresh context per test, instead of a
+browser launch per test or per module.
+
+## 10. A subTest per source line
+
+A lint-style test that walks every line of the code base under `with self.subTest(...)` creates tens of
+thousands of subtests; the reporting is the cost. Collect every offender and assert the list is empty once:
+the failure message still names each line.
+
+## 11. Durable-storage settings in test databases
+
+`PRAGMA fullfsync=ON` (or `synchronous=FULL`) flushes the drive cache on every commit, and that flush is
+serialized machine-wide, so a parallel suite becomes disk-bound. Keep production on; let `conftest.py` turn
+it off through one module constant production reads. One file went 119 s -> 10 s.
