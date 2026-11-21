@@ -3,8 +3,9 @@
 ## The standard
 
 - **Framework:** Swift Testing (`import Testing`, `@Test("behavior")`, `#expect`, `#require`),
-  shipped with Swift 6 on macOS and Linux. XCTest is the older one; use it only where a
-  project already does, or for UI tests (XCUITest).
+  shipped with Swift 6 on macOS and Linux. Write every new test in it, also in a repo that
+  still has XCTest (both run in one target); XCTest only for UI tests (XCUITest). API detail
+  and XCTest migration: the `swift-testing-pro` skill.
 - **Runner:** SwiftPM. `swift test --parallel` builds incrementally and runs tests side by
   side. Parametrize with `@Test(arguments:)` instead of copying a test per input.
 - **Never** a `main.swift` per check compiled by a shell loop of `swiftc` calls: it has no
