@@ -216,6 +216,13 @@ consolidation can name the guard's replacement.
 
 ### The shape of each test
 
+- **Use the language's standard test framework and runner.** pytest, JUnit, Go's
+  `testing`, Swift Testing under SwiftPM, the framework the ecosystem ships. It gives
+  discovery, parallel runs, incremental builds and readable failures for free. A
+  hand-rolled harness (a `main` program per check, a shell loop of compiler calls, a
+  custom `expect` helper) loses all of these, and every later test copies it. Pin source
+  text only through the project's linter, never with `grep` in the suite. Swift details:
+  `references/swift.md`.
 - **Test at the behavior's seam.** One test that drives a real path covers many lines
   honestly. Ten tests that each poke one internal cover the same lines and pin the
   internals in place.
@@ -364,6 +371,9 @@ Under a minute, on the tests in your diff.
 - You are deleting a test and the whole argument is "coverage did not drop".
 - A new test file is near-identical to one that already exists.
 - You are about to say done and have not looked back over the tests you added.
+- You are writing a `main` program, a shell loop or an `expect` helper instead of a test
+  in the language's standard framework.
+- You are adding `grep` on a source file to the suite to pin a line of code.
 
 ## References
 
@@ -371,6 +381,7 @@ Under a minute, on the tests in your diff.
 - `references/time-and-processes.md` - the five time shapes, real processes, and how to bound a genuine hang.
 - `references/coverage-without-bloat.md` - the authoring order, red-to-green without a new function, and the consolidation pass, worked.
 - `references/suite-lifecycle.md` - budget, census, consolidation, safe deletion.
+- `references/swift.md` - Swift Testing under SwiftPM, splitting an app's logic into a package, and what runs on Linux.
 - `references/machine-detection.md` - which pitfalls a guard can catch, detector designs, how to land one.
 
 ## Integration notes
