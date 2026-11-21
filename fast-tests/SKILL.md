@@ -149,6 +149,21 @@ fixture setup, teardown, or body.
    process or rebuild heavy state pays in minutes only when the repeated spawn or setup
    itself is eliminated.
 
+9. **Profile shows a slow job pinned to scarce hardware (a Mac, a GPU runner) that queues behind
+   other work, while most of its checks use only the standard library** → split the suite by the
+   platform each check needs, and run the pinned job only when its files changed.
+   Census each check's imports: a check whose sources import only the standard library (Swift's
+   Foundation, which swift.org ships for Linux) moves to the portable gate on the Linux pool; only
+   checks that import a platform framework (SwiftUI, Charts, CryptoKit, CoreGraphics, UIKit) stay
+   on the pinned job. Expect a few Darwin-only Foundation APIs (`URLRequest` without
+   FoundationNetworking, some `AttributedString` initializers): the Linux compile finds them.
+   Then build what stays side by side: one compiler call per check run serially leaves a many-core
+   machine on one core. Guard the split in the suite itself: a check in neither list, or a platform
+   import in the portable list, fails with the fix in its message.
+   Gate the pinned job on a path diff (`git diff --quiet "$before" HEAD -- ios/`), and run it anyway
+   on a dispatch or an unreadable base. One iOS suite: 30 of 38 checks passed on Linux unchanged,
+   and about half of all pushes touched nothing under `ios/`.
+
 A note on levers that swap the measurement instrumentation itself (a coverage tracer core,
 a profiler mode): A/B the semantic OUTPUT as well as the wall clock.
 Run the suite both ways and diff the coverage report line-by-line before flipping anything a

@@ -73,6 +73,11 @@ Answer all four before typing. Each has a wrong default that costs later.
    slow or unreliable test belongs in a slower tier even if it is called a unit test.
    Real processes, networks, hardware, and clocks are risk signals to measure, not an
    automatic reason to schedule a test. `fast-tests` owns the tiering mechanics.
+   Tier by platform too: a check runs on scarce hardware (a Mac, a GPU) only when its
+   code imports something only that hardware has. Keep the logic under test in a file
+   that needs only the standard library, so its check runs on the cheap Linux pool, and
+   add it to the repo's portable check list, not the pinned one. The repo's gate should
+   fail a check that is in neither list, and a platform-only import in the portable list.
 4. **Which existing test is nearest?** Search for the behavior, not the function name,
    then follow the authoring order below: an assertion or a case added to that test
    comes before a new function. A new function with one more near-duplicate body is the
